@@ -1,4 +1,4 @@
 #!/usr/bin/env python
 
-from .masking import *
+from .utils import *
 from .attention import *

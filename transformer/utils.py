@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__all__ = ['sequence_mask', 'masked_softmax']
+__all__ = ['sequence_mask', 'masked_softmax', 'transpose_qkv', 'transpose_output']
 
 import torch
 from torch.nn import functional as F
@@ -23,3 +23,15 @@ def masked_softmax(x, valid_len):
   
   x = sequence_mask(x.reshape(-1, shape[-1]), valid_len, value=-1e6)
   return F.softmax(x.reshape(shape), dim=-1)
+
+def transpose_qkv(x, n_heads):
+  x = x.reshape(x.shape[0], x.shape[1], n_heads, -1)
+  x = x.permute(0, 2, 1, 3)
+  x = x.reshape(-1, x.shape[2], x.shape[3])
+  return x
+
+def transpose_output(x, n_heads):
+  x = x.reshape(-1, n_heads, x.shape[1], x.shape[2])
+  x = x.permute(0, 2, 1, 3)
+  x = x.reshape(x.shape[0], x.shape[1], -1)
+  return x

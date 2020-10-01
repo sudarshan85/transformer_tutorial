@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-__all__ = ['DotProductAttention', 'MLPAttention']
+__all__ = ['DotProductAttention', 'MLPAttention', 'MultiHeadAttention']
 
 import torch, math
 from torch import nn
 from torch.nn import functional as F
 
-from .masking import masked_softmax
+from .utils import masked_softmax, transpose_output, transpose_qkv
 
 class DotProductAttention(nn.Module):
   def __init__(self, dropout, **kwargs):
@@ -40,3 +40,27 @@ class MLPAttention(nn.Module):
     attn_wts = self.dropout(scores)    
     out = torch.bmm(attn_wts, value)
     return out          
+
+class MultiHeadAttention(nn.Module):
+  def __init__(self, d_model, n_heads, dropout, bias=False, **kwargs):
+    super(MultiHeadAttention, self).__init__(**kwargs)
+    self.n_heads = n_heads
+    self.d_model = d_model
+    self.attention = DotProductAttention(dropout)
+    self.W_q = nn.Linear(d_model, d_model, bias=bias)
+    self.W_k = nn.Linear(d_model, d_model, bias=bias)
+    self.W_v = nn.Linear(d_model, d_model, bias=bias)
+    self.W_o = nn.Linear(d_model, d_model, bias=bias)
+    
+  def forward(self, query, key, value, valid_len):
+    query = transpose_qkv(self.W_q(query), self.n_heads)
+    key = transpose_qkv(self.W_k(key), self.n_heads)
+    value = transpose_qkv(self.W_v(value), self.n_heads)
+    
+    if valid_len is not None:
+      valid_len = torch.repeat_interleave(valid_len, repeats=self.n_heads, dim=0)
+    
+    out = self.attention(query, key, value, valid_len)
+    out = transpose_output(out, self.n_heads)
+    out = self.W_o(out)
+    return out    
