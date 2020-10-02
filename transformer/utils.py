@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
-__all__ = ['sequence_mask', 'masked_softmax', 'transpose_qkv', 'transpose_output']
+__all__ = ['sequence_mask', 'masked_softmax', 'transpose_qkv', 'transpose_output', 'clone_module']
 
 import torch
+from copy import deepcopy
+from torch import nn
 from torch.nn import functional as F
+
+def clone_module(module, n):
+  return nn.ModuleList([deepcopy(module) for _ in range(n)])
 
 def sequence_mask(x, valid_len, value=0):
   maxlen = x.shape[1]
