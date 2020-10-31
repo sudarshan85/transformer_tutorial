@@ -23,7 +23,7 @@ class DotProductAttention(nn.Module):
     return out
 
 class MLPAttention(nn.Module):
-  def __init__(self, key_size, query_size, units, dropout, **kwargs):
+  def __init__(self, key_size, query_size, units, dropout=0, **kwargs):
     super(MLPAttention, self).__init__(**kwargs)
     self.W_k = nn.Linear(key_size, units, bias=False)
     self.W_q = nn.Linear(query_size, units, bias=False)
@@ -42,7 +42,7 @@ class MLPAttention(nn.Module):
     return out
 
 class MultiHeadAttention(nn.Module):
-  def __init__(self, d_model, n_heads, dropout, bias=False, **kwargs):
+  def __init__(self, d_model, n_heads, dropout=0, bias=False, **kwargs):
     super(MultiHeadAttention, self).__init__(**kwargs)
     self.n_heads = n_heads
     self.d_model = d_model
